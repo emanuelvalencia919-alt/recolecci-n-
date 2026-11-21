@@ -58,6 +58,19 @@ h1,h2,h3{font-family:var(--serif);line-height:1.1;margin:0;color:var(--g1)}
 .lote:nth-child(3){border-top-color:var(--cherry)}
 .lote h3{font-size:24px}
 .lote .sub{color:#5c6b5c;font-size:15px}
+.tools{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;margin-top:26px}
+.tools label{margin:0;flex:1 1 220px;max-width:340px}
+.btn2{border:2px solid var(--g2);background:transparent;color:var(--g1);padding:11px 18px;border-radius:999px;font:inherit;font-weight:700;cursor:pointer;transition:background .2s,color .2s}
+.btn2:hover{background:var(--g2);color:#fff}
+.btn2.arm{background:var(--cherry);border-color:var(--cherry);color:#fff}
+.btn2[disabled]{opacity:.4;cursor:not-allowed}
+.lote input{margin:0 0 8px;padding:8px 10px;font-size:16px}
+.lote input.nm{font:700 22px var(--serif);color:var(--g1);border-color:transparent;background:transparent;padding:4px 6px;margin:-4px -6px 4px}
+.lote input.nm:hover,.lote input.nm:focus{border-color:#d8e3d0;background:var(--paper)}
+.lrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lrow label{font-size:13px;margin:0;color:#5c6b5c}
+.lote .del{margin-top:12px;font-size:14px;padding:6px 14px}
+.empty{grid-column:1/-1;color:#5c6b5c;padding:20px 0}
 .kg{font:700 36px var(--serif);color:var(--g1);margin-top:14px}
 .kg small{font:500 15px system-ui,sans-serif;color:#5c6b5c}
 .m{height:10px;border-radius:6px;background:#e7efe0;overflow:hidden;margin:10px 0 8px}
@@ -139,16 +152,14 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
 </header>
 
 <section class="sec" id="lotes">
-  <h2 class="rv">Tus lotes, de un vistazo</h2>
-  <p class="lead rv">Cada lote con su variedad, su área y lo que ha producido esta temporada. Son datos de ejemplo.</p>
-  <div class="grid">
-    <article class="lote rv"><h3>La Esperanza</h3><div class="sub">Castillo · 2,5 hectáreas</div>
-      <div class="kg">730 <small>kg recolectados</small></div><div class="m"><i style="--w:75%"></i></div><div class="sub">292 kg por hectárea</div></article>
-    <article class="lote rv"><h3>El Mirador</h3><div class="sub">Caturra · 1,2 hectáreas</div>
-      <div class="kg">330 <small>kg recolectados</small></div><div class="m"><i style="--w:34%"></i></div><div class="sub">275 kg por hectárea</div></article>
-    <article class="lote rv"><h3>Buenavista</h3><div class="sub">Colombia · 3 hectáreas</div>
-      <div class="kg">980 <small>kg recolectados</small></div><div class="m"><i style="--w:100%"></i></div><div class="sub">327 kg por hectárea</div></article>
+  <h2 class="rv">Tus lotes de <span data-p="l">café</span></h2>
+  <p class="lead rv">Ponle nombre a tu producto, agrega o quita lotes y edita sus datos. Se guarda en este navegador.</p>
+  <div class="tools rv">
+    <label for="prod">¿Qué producto cultivas?<input id="prod" maxlength="30" autocomplete="off" value="Café"></label>
+    <button class="btn2" id="add" type="button">Agregar lote</button>
   </div>
+  <div class="msg" id="lmsg" role="alert"></div>
+  <div class="grid" id="grid"></div>
 </section>
 
 <section class="band" id="proceso">
@@ -167,10 +178,12 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
 
 <section class="sec" id="calculadora">
   <h2 class="rv">¿Cuánto vale tu cosecha?</h2>
-  <p class="lead rv">Escribe los kilos de pergamino seco y el precio por carga. Una carga son 125 kg.</p>
+  <p class="lead rv">Escribe los kilos de <span data-p="l">café</span> y el precio por carga. Una carga son <span id="cl">125</span> kg.</p>
   <div class="calc rv">
     <div>
-      <label for="kg">Kilos de pergamino seco<input id="kg" type="number" min="0" max="1000000" step="any" inputmode="decimal" value="625"></label>
+      <label for="kg">Kilos de <span data-p="l">café</span><input id="kg" type="number" min="0" max="1000000" step="any" inputmode="decimal" value="625"></label>
+      <button class="btn2" id="useTotal" type="button" style="margin-bottom:16px">Usar el total de mis lotes</button>
+      <label for="kc">Kilos por carga<input id="kc" type="number" min="1" max="100000" step="any" inputmode="decimal" value="125"></label>
       <label for="pr">Precio por carga (COP)<input id="pr" type="number" min="0" max="100000000" step="any" inputmode="decimal" value="2150000"></label>
       <div class="msg" id="msg" role="alert"></div>
     </div>
@@ -227,7 +240,6 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
   } else { items.forEach(function(el){ el.classList.add("in") }) }
 
   /* Calculadora */
-  var CARGA = 125;
   var cop = new Intl.NumberFormat("es-CO", {style:"currency", currency:"COP", maximumFractionDigits:0});
   var n2 = new Intl.NumberFormat("es-CO", {maximumFractionDigits:2});
   function tween(el, to, fmt){
@@ -241,13 +253,14 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
     })(t0);
   }
   function calc(){
-    var kg = Number($("kg").value), pr = Number($("pr").value), msg = $("msg");
-    if($("kg").value === "" || $("pr").value === "" || !isFinite(kg) || !isFinite(pr) || kg < 0 || pr < 0 || kg > 1e6 || pr > 1e8){
-      msg.textContent = "Escribe números válidos: kilos hasta 1.000.000 y precio hasta 100.000.000.";
+    var kg = Number($("kg").value), pr = Number($("pr").value), kc = Number($("kc").value), msg = $("msg");
+    if($("kg").value === "" || $("pr").value === "" || $("kc").value === "" || !isFinite(kg) || !isFinite(pr) || !isFinite(kc) || kg < 0 || pr < 0 || kc < 1 || kg > 1e6 || pr > 1e8 || kc > 1e5){
+      msg.textContent = "Escribe números válidos: kilos hasta 1.000.000, precio hasta 100.000.000 y kilos por carga desde 1.";
       return;
     }
     msg.textContent = "";
-    var cargas = kg / CARGA;
+    $("cl").textContent = n2.format(kc);
+    var cargas = kg / kc;
     tween($("valor"), cargas * pr, function(v){ return cop.format(v) });
     tween($("cargas"), cargas, function(v){ return n2.format(v) });
     var box = $("sacks"), full = Math.floor(cargas), part = cargas - full > 0.001, shown = Math.min(24, full + (part ? 1 : 0));
@@ -258,11 +271,114 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
       d.style.animationDelay = (i * 40) + "ms";
       box.appendChild(d);
     }
-    $("nota").textContent = cargas > 24 ? "Se dibujan 24 sacos de " + n2.format(cargas) + " cargas." : "Cada saco es una carga de 125 kg.";
+    $("nota").textContent = cargas > 24 ? "Se dibujan 24 sacos de " + n2.format(cargas) + " cargas." : "Cada saco es una carga de " + n2.format(kc) + " kg.";
   }
   $("kg").addEventListener("input", calc);
   $("pr").addEventListener("input", calc);
-  calc();
+
+  /* Producto y lotes editables */
+  var KEY = "cosecha_finca_v1", MAXL = 12;
+  var state = {prod:"Café", kc:125, next:4, lots:[
+    {id:1,n:"La Esperanza",v:"Castillo",ha:2.5,kg:730},
+    {id:2,n:"El Mirador",v:"Caturra",ha:1.2,kg:330},
+    {id:3,n:"Buenavista",v:"Colombia",ha:3,kg:980}]};
+  try{
+    var sv = JSON.parse(localStorage.getItem(KEY));
+    if(sv && typeof sv.prod === "string" && Array.isArray(sv.lots) && sv.lots.every(function(l){ return l && typeof l.n === "string" && typeof l.v === "string" && isFinite(l.ha) && isFinite(l.kg) && isFinite(l.id) })){
+      state = sv; if(!isFinite(state.next)) state.next = 1000; if(!(state.kc >= 1)) state.kc = 125;
+    }
+  }catch(e){}
+  function persist(){ try{ localStorage.setItem(KEY, JSON.stringify(state)) }catch(e){} }
+
+  var grid = $("grid"), lmsg = $("lmsg"), armed = null, armT;
+  var nf = new Intl.NumberFormat("es-CO", {maximumFractionDigits:1});
+
+  function applyProd(){
+    var p = state.prod.trim() || "tu producto";
+    document.querySelectorAll('[data-p="l"]').forEach(function(e){ e.textContent = p.toLowerCase() });
+  }
+  function refresh(){
+    var mx = Math.max.apply(null, state.lots.map(function(l){ return l.kg }).concat([1]));
+    state.lots.forEach(function(l){
+      var c = grid.querySelector('[data-id="' + l.id + '"]'); if(!c) return;
+      c.querySelector(".m i").style.setProperty("--w", Math.round(l.kg / mx * 100) + "%");
+      c.querySelector(".kph").textContent = l.ha > 0 ? nf.format(l.kg / l.ha) + " kg por hectárea" : "";
+    });
+  }
+  function disarm(){
+    armed = null;
+    grid.querySelectorAll(".del.arm").forEach(function(b){ b.textContent = "Quitar lote"; b.classList.remove("arm") });
+  }
+  function card(l){
+    var c = document.createElement("article");
+    c.className = "lote rv"; c.dataset.id = l.id;
+    c.innerHTML = '<input class="nm" aria-label="Nombre del lote" maxlength="30">' +
+      '<input aria-label="Variedad" maxlength="30" placeholder="Variedad">' +
+      '<div class="lrow"><label>Hectáreas<input type="number" min="0.01" max="10000" step="any" inputmode="decimal"></label>' +
+      '<label>Kilos recolectados<input type="number" min="0" max="1000000" step="any" inputmode="decimal"></label></div>' +
+      '<div class="m"><i></i></div><div class="sub kph"></div><div class="msg"></div>' +
+      '<button class="btn2 del" type="button">Quitar lote</button>';
+    var ins = c.querySelectorAll("input"), msg = c.querySelector(".msg");
+    ins[0].value = l.n; ins[1].value = l.v; ins[2].value = l.ha; ins[3].value = l.kg;
+    ins[0].addEventListener("input", function(){ l.n = ins[0].value; persist() });
+    ins[1].addEventListener("input", function(){ l.v = ins[1].value; persist() });
+    function num(inp, key, min, max, text){
+      inp.addEventListener("input", function(){
+        var v = Number(inp.value);
+        if(inp.value === "" || !isFinite(v) || v < min || v > max){ msg.textContent = text; return }
+        msg.textContent = ""; l[key] = v; persist(); refresh();
+      });
+    }
+    num(ins[2], "ha", 0.01, 10000, "Las hectáreas deben estar entre 0,01 y 10.000.");
+    num(ins[3], "kg", 0, 1000000, "Los kilos deben estar entre 0 y 1.000.000.");
+    var b = c.querySelector(".del");
+    b.addEventListener("click", function(){
+      if(armed !== l.id){
+        disarm(); armed = l.id; b.textContent = "Confirmar"; b.classList.add("arm");
+        clearTimeout(armT); armT = setTimeout(disarm, 3000); return;
+      }
+      state.lots = state.lots.filter(function(x){ return x.id !== l.id });
+      armed = null; persist(); render();
+    });
+    return c;
+  }
+  function render(){
+    grid.innerHTML = "";
+    if(!state.lots.length){
+      var p = document.createElement("p"); p.className = "empty";
+      p.textContent = "Aún no tienes lotes. Pulsa «Agregar lote» para crear el primero.";
+      grid.appendChild(p);
+    }
+    state.lots.forEach(function(l){ grid.appendChild(card(l)) });
+    refresh();
+    $("add").disabled = state.lots.length >= MAXL;
+    var cs = grid.querySelectorAll(".rv");
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ cs.forEach(function(c){ c.classList.add("in") }) }) });
+  }
+
+  $("add").addEventListener("click", function(){
+    if(state.lots.length >= MAXL){ lmsg.textContent = "Puedes tener hasta " + MAXL + " lotes."; return }
+    lmsg.textContent = "";
+    state.lots.push({id: state.next++, n: "Lote " + (state.lots.length + 1), v: "", ha: 1, kg: 0});
+    persist(); render();
+    var nm = grid.querySelectorAll(".lote .nm"), last = nm[nm.length - 1];
+    if(last){ last.focus(); last.select() }
+  });
+  var pi = $("prod");
+  pi.value = state.prod;
+  pi.addEventListener("input", function(){ state.prod = pi.value.slice(0, 30); persist(); applyProd() });
+  $("useTotal").addEventListener("click", function(){
+    var t = state.lots.reduce(function(a, l){ return a + l.kg }, 0);
+    $("kg").value = Math.round(t * 100) / 100; calc();
+  });
+  $("kc").value = state.kc;
+  $("kc").addEventListener("input", function(){
+    var v = Number($("kc").value);
+    if(isFinite(v) && v >= 1){ state.kc = v; persist() }
+    calc();
+  });
+
+  applyProd(); render(); calc();
 })();
 </script>
 </body>
