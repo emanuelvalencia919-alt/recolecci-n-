@@ -71,6 +71,23 @@ h1,h2,h3{font-family:var(--serif);line-height:1.1;margin:0;color:var(--g1)}
 .lrow label{font-size:13px;margin:0;color:#5c6b5c}
 .lote .del{margin-top:12px;font-size:14px;padding:6px 14px}
 .empty{grid-column:1/-1;color:#5c6b5c;padding:20px 0}
+[hidden]{display:none!important}
+button.btn{border:0;font:inherit;font-weight:700;cursor:pointer}
+.bar .navbtn{background:none;border:0;font:inherit;font-weight:700;color:#14391e;font-size:15px;cursor:pointer;padding:0}
+.bar .who{font-size:14px;color:#14391e}
+@media(max-width:560px){.bar .who{display:none}}
+.lote select{margin:0 0 8px;padding:8px 10px;font-size:16px}
+input:disabled,select:disabled{opacity:.6;cursor:not-allowed}
+.lote input.nm:disabled{border-color:transparent;background:transparent;opacity:1}
+.gps{font-size:14px;padding:6px 14px;margin:2px 0 8px}
+.ptxt{font-size:14px;color:#4b5a4b;white-space:pre-line;margin-bottom:6px}
+.ptxt a{color:var(--g1);font-weight:600}
+.ov{position:fixed;inset:0;background:rgba(10,20,12,.55);display:flex;align-items:center;justify-content:center;z-index:40;padding:16px}
+.dlg{background:#fff;border-radius:18px;padding:24px;width:100%;max-width:400px}
+.panel{margin-top:30px;background:#fff;border-radius:22px;padding:22px;box-shadow:0 12px 40px rgba(31,90,44,.12);overflow-x:auto}
+.ut{width:100%;border-collapse:collapse;min-width:520px}
+.ut th,.ut td{padding:10px 8px;text-align:left;border-bottom:1px solid #e7efe0}
+.ut select{margin:0;width:auto;padding:6px 10px;font-size:15px}
 .kg{font:700 36px var(--serif);color:var(--g1);margin-top:14px}
 .kg small{font:500 15px system-ui,sans-serif;color:#5c6b5c}
 .m{height:10px;border-radius:6px;background:#e7efe0;overflow:hidden;margin:10px 0 8px}
@@ -97,7 +114,7 @@ html:not(.js) .steps li::after{width:100%}
 .calc{margin-top:34px;background:#fff;border-radius:22px;padding:28px;display:grid;gap:28px;box-shadow:0 12px 40px rgba(31,90,44,.12)}
 @media(min-width:820px){.calc{grid-template-columns:1fr 1.25fr}}
 label{display:block;font-weight:600;font-size:15px;margin-bottom:16px}
-input{display:block;width:100%;margin-top:6px;padding:12px 14px;font:inherit;font-size:18px;border:2px solid #d8e3d0;border-radius:12px;background:var(--paper);color:var(--ink)}
+input,select{display:block;width:100%;margin-top:6px;padding:12px 14px;font:inherit;font-size:18px;border:2px solid #d8e3d0;border-radius:12px;background:var(--paper);color:var(--ink)}
 input:focus{border-color:var(--g2);outline:none}
 .res small{color:#5c6b5c;font-size:14px}
 .res .big{font:700 clamp(34px,5vw,52px) var(--serif);color:var(--g1);line-height:1.1;margin-bottom:14px}
@@ -120,7 +137,10 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
   <a class="logo" href="#top">Cosecha</a>
   <a class="l hide" href="#lotes">Lotes</a>
   <a class="l hide" href="#proceso">Proceso</a>
-  <a class="l" href="#calculadora">Calculadora</a>
+  <a class="l hide" id="navu" href="#usuarios" hidden>Usuarios</a>
+  <a class="l" id="navc" href="#calculadora" hidden>Calculadora</a>
+  <span class="who" id="who"></span>
+  <button class="navbtn" id="login" type="button">Ingresar</button>
 </nav>
 
 <header class="hero" id="top">
@@ -131,7 +151,7 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
   <div class="txt">
     <h1>Del lote a la taza, con las cuentas claras.</h1>
     <p>Cosecha es el cuaderno digital del caficultor del Eje Cafetero: registra tus lotes, los kilos recolectados y tus ventas, y calcula cuánto deja cada carga.</p>
-    <div class="cta"><a class="btn" href="#calculadora">Calcular mi venta</a><a class="t" href="#lotes">Ver los lotes</a></div>
+    <div class="cta"><a class="btn" id="ctac" href="#calculadora" hidden>Calcular mi venta</a><a class="t" href="#lotes">Ver los lotes</a></div>
   </div>
   <svg class="scene" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
     <defs>
@@ -153,11 +173,12 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
 
 <section class="sec" id="lotes">
   <h2 class="rv">Tus lotes de <span data-p="l">café</span></h2>
-  <p class="lead rv">Ponle nombre a tu producto, agrega o quita lotes y edita sus datos. Se guarda en este navegador.</p>
+  <p class="lead rv">Ponle nombre a tu producto, agrega o quita lotes y edita sus datos. Se guarda en este navegador. El botón GPS envía las coordenadas a Open-Meteo y BigDataCloud para obtener la altura y el departamento.</p>
   <div class="tools rv">
     <label for="prod">¿Qué producto cultivas?<input id="prod" maxlength="30" autocomplete="off" value="Café"></label>
     <button class="btn2" id="add" type="button">Agregar lote</button>
   </div>
+  <p class="lead" id="rolenote" style="font-size:15px;margin-top:12px"></p>
   <div class="msg" id="lmsg" role="alert"></div>
   <div class="grid" id="grid"></div>
 </section>
@@ -197,6 +218,24 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
     </div>
   </div>
 </section>
+
+<section class="sec" id="usuarios" hidden>
+  <h2>Usuarios y roles</h2>
+  <p class="lead">El administrador cambia el rol de cada cuenta. El usuario solo registra kilos y ubica los lotes con GPS.</p>
+  <div class="panel"><div id="ulist"></div><div class="msg" id="umsg" role="alert"></div></div>
+</section>
+
+<div class="ov" id="authov" hidden><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="atitle">
+  <h3 id="atitle">Ingresar</h3>
+  <form id="aform" novalidate style="margin-top:14px">
+    <label id="nl" hidden>Nombre<input id="an" maxlength="40" autocomplete="name"></label>
+    <label>Correo<input id="ae" type="email" maxlength="80" autocomplete="email"></label>
+    <label>Contraseña<input id="ap" type="password" maxlength="64" autocomplete="current-password"></label>
+    <p class="msg" id="ahint" style="color:#5c6b5c"></p>
+    <div class="msg" id="aerr" role="alert"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" id="asub" type="submit">Ingresar</button><button class="btn2" id="aswap" type="button">Crear cuenta</button><button class="btn2" id="aclose" type="button">Cerrar</button></div>
+  </form>
+</div></div>
 
 <footer>
   <b>Cosecha</b>
@@ -317,6 +356,8 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
       '<div class="lrow"><label>Hectáreas<input type="number" min="0.01" max="10000" step="any" inputmode="decimal"></label>' +
       '<label>Kilos recolectados<input type="number" min="0" max="1000000" step="any" inputmode="decimal"></label></div>' +
       '<div class="m"><i></i></div><div class="sub kph"></div><div class="msg"></div>' +
+      '<div class="lrow"><label>Departamento<select class="dep"></select></label><label>Altitud (msnm)<input class="alt" type="number" min="0" max="6000" step="1" inputmode="numeric"></label></div>' +
+      '<button class="btn2 gps" type="button">Ubicar con GPS</button><div class="ptxt" aria-live="polite"></div>' +
       '<button class="btn2 del" type="button">Quitar lote</button>';
     var ins = c.querySelectorAll("input"), msg = c.querySelector(".msg");
     ins[0].value = l.n; ins[1].value = l.v; ins[2].value = l.ha; ins[3].value = l.kg;
@@ -331,7 +372,10 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
     }
     num(ins[2], "ha", 0.01, 10000, "Las hectáreas deben estar entre 0,01 y 10.000.");
     num(ins[3], "kg", 0, 1000000, "Los kilos deben estar entre 0 y 1.000.000.");
-    var b = c.querySelector(".del");
+    var adm = role() === "admin", can = !!me;
+    ins[0].disabled = ins[1].disabled = ins[2].disabled = !adm; ins[3].disabled = !can;
+    setupLoc(l, c, can);
+    var b = c.querySelector(".del"); b.hidden = !adm;
     b.addEventListener("click", function(){
       if(armed !== l.id){
         disarm(); armed = l.id; b.textContent = "Confirmar"; b.classList.add("arm");
@@ -346,7 +390,7 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
     grid.innerHTML = "";
     if(!state.lots.length){
       var p = document.createElement("p"); p.className = "empty";
-      p.textContent = "Aún no tienes lotes. Pulsa «Agregar lote» para crear el primero.";
+      p.textContent = role() === "admin" ? "Aún no tienes lotes. Pulsa «Agregar lote» para crear el primero." : "Aún no hay lotes registrados.";
       grid.appendChild(p);
     }
     state.lots.forEach(function(l){ grid.appendChild(card(l)) });
@@ -378,7 +422,162 @@ footer b{font-family:var(--serif);font-size:22px;color:#fff;display:block;margin
     calc();
   });
 
-  applyProd(); render(); calc();
+  /* Ubicación y perfil probable del café */
+  var DEPS = ["Antioquia","Caldas","Cauca","Huila","Nariño","Quindío","Risaralda","Santander","Tolima","Valle del Cauca"];
+  var REG = {"Antioquia":"equilibrado, de cuerpo medio y notas a chocolate",
+    "Caldas":"equilibrado, dulce y de acidez media","Cauca":"floral y dulce, con acidez media-alta y notas cítricas",
+    "Huila":"dulce y frutal, con acidez media-alta y notas a caramelo","Nariño":"muy dulce, de acidez alta y brillante, con notas florales y cítricas",
+    "Quindío":"equilibrado, dulce y de acidez media","Risaralda":"equilibrado, dulce y de acidez media",
+    "Santander":"de cuerpo medio-alto y acidez suave, con notas a chocolate","Tolima":"equilibrado, dulce y de cuerpo medio",
+    "Valle del Cauca":"dulce y de acidez media, con notas a caramelo"};
+  function altTxt(a){
+    return a < 1000 ? "está por debajo del rango habitual del café de calidad (1.000 a 2.000 m)."
+      : a < 1400 ? "altura media-baja: suele dar más cuerpo y menos acidez."
+      : a < 1800 ? "altura media-alta: buen equilibrio, con más acidez y dulzor."
+      : a <= 2100 ? "altura alta: granos densos, acidez brillante y maduración lenta."
+      : "está por encima del rango habitual del café.";
+  }
+  function varTxt(a){
+    return a < 1400 ? "Castillo o Cenicafé 1, resistentes a la roya."
+      : a < 1600 ? "Castillo, Cenicafé 1 o Caturra (más sensible a la roya)."
+      : "Castillo, Cenicafé 1, Caturra o Geisha.";
+  }
+  function plain(s){ return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() }
+  function normDep(s){
+    if(!s) return "";
+    var n = plain(s);
+    for(var i = 0; i < DEPS.length; i++){ if(n.indexOf(plain(DEPS[i])) > -1) return DEPS[i] }
+    return "Otro";
+  }
+  function getJSON(u){ return fetch(u).then(function(r){ return r.json() }).catch(function(){ return null }) }
+  function setupLoc(l, c, can){
+    var dep = c.querySelector(".dep"), alt = c.querySelector(".alt"), gps = c.querySelector(".gps"), out = c.querySelector(".ptxt");
+    dep.innerHTML = '<option value="">Sin definir</option>' + DEPS.concat("Otro").map(function(d){ return "<option>" + d + "</option>" }).join("");
+    dep.value = l.dep || ""; alt.value = l.alt == null ? "" : l.alt;
+    dep.disabled = alt.disabled = !can; gps.hidden = !can;
+    var link = document.createElement("a");
+    link.target = "_blank"; link.rel = "noopener"; link.textContent = "Ver en el mapa";
+    function show(){
+      var a = l.alt, lines = [], u = [l.city, l.dep].filter(Boolean).join(", ");
+      if(u || a != null) lines.push("Ubicación: " + [u, a != null ? nf.format(a) + " msnm" : ""].filter(Boolean).join(" · "));
+      if(REG[l.dep]) lines.push("Perfil de la región (" + l.dep + "): " + REG[l.dep] + ".");
+      if(a != null){ lines.push("Por la altura: " + altTxt(a)); if(a >= 1000 && a <= 2100) lines.push("Variedades que suelen darse bien: " + varTxt(a)) }
+      lines.push(lines.length ? "Es una estimación orientativa: el perfil real depende de la variedad, el beneficio y el secado."
+        : "Elige un departamento y la altitud, o usa el GPS, para ver qué perfil de café suele darse aquí.");
+      out.textContent = lines.join("\n");
+      if(l.lat != null && l.lng != null){
+        link.href = "https://www.openstreetmap.org/?mlat=" + l.lat + "&mlon=" + l.lng + "#map=15/" + l.lat + "/" + l.lng;
+        out.appendChild(document.createTextNode("\n")); out.appendChild(link);
+      }
+    }
+    dep.addEventListener("change", function(){ l.dep = dep.value; persist(); show() });
+    alt.addEventListener("input", function(){
+      var v = Number(alt.value);
+      if(alt.value === "") delete l.alt; else if(isFinite(v) && v >= 0 && v <= 6000) l.alt = Math.round(v); else return;
+      persist(); show();
+    });
+    gps.addEventListener("click", function(){
+      if(!navigator.geolocation){ out.textContent = "Tu navegador no permite la geolocalización."; return }
+      out.textContent = "Buscando la ubicación…"; gps.disabled = true;
+      navigator.geolocation.getCurrentPosition(function(pos){
+        var la = pos.coords.latitude, lo = pos.coords.longitude;
+        l.lat = Math.round(la * 1e5) / 1e5; l.lng = Math.round(lo * 1e5) / 1e5;
+        Promise.all([
+          getJSON("https://api.open-meteo.com/v1/elevation?latitude=" + la + "&longitude=" + lo),
+          getJSON("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + la + "&longitude=" + lo + "&localityLanguage=es")
+        ]).then(function(r){
+          if(r[0] && r[0].elevation && isFinite(r[0].elevation[0])) l.alt = Math.round(r[0].elevation[0]);
+          if(r[1]){ l.city = r[1].city || r[1].locality || ""; var d = normDep(r[1].principalSubdivision); if(d) l.dep = d }
+          dep.value = l.dep || ""; alt.value = l.alt == null ? "" : l.alt;
+          persist(); show(); gps.disabled = false;
+        });
+      }, function(e){
+        gps.disabled = false;
+        out.textContent = e.code === 1 ? "No diste permiso de ubicación. Puedes elegir el departamento y la altitud a mano."
+          : e.code === 3 ? "Se agotó el tiempo buscando la ubicación. Intenta de nuevo." : "No se pudo obtener la ubicación.";
+      }, {enableHighAccuracy:true, timeout:15000, maximumAge:60000});
+    });
+    show();
+  }
+
+  /* Roles: usuario y administrador (solo en la interfaz, sin servidor) */
+  var UK = "cosecha_users_v1", SK = "cosecha_sess_v1", users = [], sess = null, me = null;
+  try{ users = JSON.parse(localStorage.getItem(UK)) || []; if(!Array.isArray(users)) users = []; sess = localStorage.getItem(SK) }catch(e){}
+  function saveU(){ try{ localStorage.setItem(UK, JSON.stringify(users)) }catch(e){} }
+  function role(){ return me ? me.role : null }
+  async function sha(s){
+    try{ var b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+      return Array.from(new Uint8Array(b)).map(function(v){ return v.toString(16).padStart(2, "0") }).join("") }
+    catch(e){ return btoa(unescape(encodeURIComponent(s))) }
+  }
+  function applyRole(){
+    me = users.filter(function(u){ return u.email === sess })[0] || null;
+    var adm = role() === "admin";
+    ["calculadora","usuarios","navu","navc","ctac","add"].forEach(function(id){ $(id).hidden = !adm });
+    $("prod").disabled = !adm;
+    $("login").textContent = me ? "Salir" : "Ingresar";
+    $("who").textContent = me ? me.name + " · " + (adm ? "administrador" : "usuario") : "";
+    $("rolenote").textContent = !me ? "Estás en modo lectura. Ingresa para registrar kilos o administrar los lotes."
+      : adm ? "Rol administrador: control total de lotes, producto, ventas y usuarios."
+      : "Rol usuario: puedes registrar kilos y ubicar los lotes con GPS.";
+    render(); if(adm) renderUsers();
+  }
+  function renderUsers(){
+    var box = $("ulist"), t = document.createElement("table"), tb = document.createElement("tbody");
+    t.className = "ut"; t.innerHTML = "<thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th></th></tr></thead>";
+    users.forEach(function(u){
+      var tr = document.createElement("tr"), td = [0,1,2,3].map(function(){ return tr.appendChild(document.createElement("td")) });
+      td[0].textContent = u.name; td[1].textContent = u.email;
+      var sel = document.createElement("select"); sel.setAttribute("aria-label", "Rol de " + u.name);
+      sel.innerHTML = '<option value="user">Usuario</option><option value="admin">Administrador</option>'; sel.value = u.role;
+      sel.addEventListener("change", function(){
+        if(u.role === "admin" && sel.value !== "admin" && users.filter(function(v){ return v.role === "admin" }).length < 2){
+          sel.value = "admin"; $("umsg").textContent = "Debe quedar al menos un administrador."; return;
+        }
+        u.role = sel.value; saveU(); $("umsg").textContent = ""; if(u === me) applyRole(); else renderUsers();
+      });
+      td[2].appendChild(sel);
+      var d = document.createElement("button"); d.type = "button"; d.className = "btn2"; d.textContent = "Eliminar"; d.disabled = u === me;
+      d.style.cssText = "font-size:14px;padding:6px 14px";
+      d.addEventListener("click", function(){
+        if(d.dataset.a !== "1"){ d.dataset.a = "1"; d.classList.add("arm"); d.textContent = "Confirmar";
+          setTimeout(function(){ d.dataset.a = ""; d.classList.remove("arm"); d.textContent = "Eliminar" }, 3000); return }
+        users = users.filter(function(v){ return v !== u }); saveU(); renderUsers();
+      });
+      td[3].appendChild(d); tb.appendChild(tr);
+    });
+    t.appendChild(tb); box.innerHTML = ""; box.appendChild(t);
+  }
+  function openAuth(reg){
+    $("nl").hidden = !reg;
+    $("atitle").textContent = $("asub").textContent = reg ? "Crear cuenta" : "Ingresar";
+    $("aswap").textContent = reg ? "Ya tengo cuenta" : "Crear cuenta";
+    $("ahint").textContent = reg && !users.length ? "La primera cuenta que se crea será la del administrador." : "";
+    $("aerr").textContent = ""; $("aform").reset(); $("authov").hidden = false; (reg ? $("an") : $("ae")).focus();
+  }
+  $("login").addEventListener("click", function(){
+    if(me){ sess = null; try{ localStorage.removeItem(SK) }catch(e){} applyRole() } else openAuth(!users.length);
+  });
+  $("aswap").addEventListener("click", function(){ openAuth($("nl").hidden) });
+  $("aclose").addEventListener("click", function(){ $("authov").hidden = true });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") $("authov").hidden = true });
+  $("aform").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var reg = !$("nl").hidden, em = $("ae").value.trim().toLowerCase(), pw = $("ap").value, nm = $("an").value.trim(), er = $("aerr");
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)){ er.textContent = "Escribe un correo válido."; return }
+    if(pw.length < 8){ er.textContent = "La contraseña debe tener al menos 8 caracteres."; return }
+    if(reg && nm.length < 2){ er.textContent = "Escribe tu nombre (mínimo 2 letras)."; return }
+    sha(em + ":" + pw).then(function(h){
+      if(reg){
+        if(users.some(function(u){ return u.email === em })){ er.textContent = "Ese correo ya tiene cuenta."; return }
+        users.push({name:nm, email:em, h:h, role: users.length ? "user" : "admin"}); saveU();
+      } else if(!users.some(function(u){ return u.email === em && u.h === h })){ er.textContent = "Correo o contraseña incorrectos."; return }
+      sess = em; try{ localStorage.setItem(SK, em) }catch(e){}
+      $("authov").hidden = true; applyRole();
+    });
+  });
+
+  applyProd(); applyRole(); calc();
 })();
 </script>
 </body>
